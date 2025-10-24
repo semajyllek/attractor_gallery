@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const nameDisplay = document.getElementById('nameDisplay');
     const colorToggle = document.getElementById('colorToggle');
     
+    // Create an off-screen buffer canvas for proper fading
+    let bufferCanvas;
+    let bufferCtx;
+    
     // State variables
     let width, height;
     let animationPhase = 0;
@@ -43,6 +47,16 @@ document.addEventListener('DOMContentLoaded', function() {
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
+        
+        // Initialize the buffer canvas
+        bufferCanvas = document.createElement('canvas');
+        bufferCanvas.width = width;
+        bufferCanvas.height = height;
+        bufferCtx = bufferCanvas.getContext('2d');
+        
+        // Fill buffer with black initially
+        bufferCtx.fillStyle = "#000000";
+        bufferCtx.fillRect(0, 0, width, height);
     }
     
     /**
@@ -62,9 +76,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update parameters from the new preset
         updateParametersFromPreset();
         
-        // Completely clear the canvas when changing patterns to remove previous pattern artifacts
-        ctx.fillStyle = "rgba(0, 0, 0, 1)";  // Solid black
+        // Completely clear both canvases when changing patterns to remove any artifacts
+        ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, width, height);
+        
+        bufferCtx.fillStyle = "#000000";
+        bufferCtx.fillRect(0, 0, width, height);
         
         // Display the preset name
         displayPresetName();
@@ -158,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
      * Drawing functions
      */
     function drawAttractorPoints(numPoints) {
-        // Clear canvas with semi-transparent black for trails
+        // Apply the fade effect using our buffer technique
         clearCanvasWithFade();
         
         // Center coordinates and scale
@@ -172,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Get current pattern info
         const patternInfo = presets[currentPresetIndex];
         
-        // Draw points
+        // Draw points directly to the main canvas
         for (let i = 0; i < numPoints; i++) {
             // Calculate next point in the attractor
             point = iterateAttractor(point.x, point.y);
@@ -190,17 +207,34 @@ document.addEventListener('DOMContentLoaded', function() {
             // Calculate appearance (color, size, opacity)
             const appearance = calculatePointAppearance(transformed, patternInfo);
             
-            // Draw the point
+            // Draw the point directly to the main canvas
             drawPoint(canvasX, canvasY, appearance);
         }
-        
-        // Reset global alpha
-        ctx.globalAlpha = 1;
     }
     
     function clearCanvasWithFade() {
-        ctx.fillStyle = `rgba(0, 0, 0, ${fadeOpacity})`;
+        // Swap canvases to apply fade effect correctly
+        
+        // First, draw the current canvas onto the buffer with reduced opacity
+        bufferCtx.globalCompositeOperation = 'source-over';
+        bufferCtx.globalAlpha = 1 - fadeOpacity;
+        bufferCtx.drawImage(canvas, 0, 0);
+        
+        // Then fade to black slightly
+        bufferCtx.globalCompositeOperation = 'source-over';
+        bufferCtx.globalAlpha = fadeOpacity;
+        bufferCtx.fillStyle = "#000000";
+        bufferCtx.fillRect(0, 0, width, height);
+        
+        // Reset alpha for future operations
+        bufferCtx.globalAlpha = 1.0;
+        
+        // Clear the main canvas completely
+        ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, width, height);
+        
+        // Draw the buffer onto the main canvas
+        ctx.drawImage(bufferCanvas, 0, 0);
     }
     
     function initializeAttractor() {
@@ -800,6 +834,9 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.beginPath();
         ctx.arc(x, y, pointSize, 0, Math.PI * 2);
         ctx.fill();
+        
+        // Reset global alpha for next operations
+        ctx.globalAlpha = 1.0;
     }
     
     // Initialize the application
