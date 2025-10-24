@@ -1,4 +1,4 @@
-# Clifford Attractor Gallery
+# Attractor Gallery
 
 An interactive visualization of strange attractors and chaotic systems.
 
