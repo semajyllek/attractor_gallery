@@ -14,10 +14,6 @@ document.addEventListener('DOMContentLoaded', function() {
     let colorMode = true;
     const fadeOpacity = 0.08; // Increased fade opacity for faster clearing of traces
     
-    // Counter for periodic canvas reset
-    let frameCounter = 0;
-    const resetEveryNFrames = 100; // Reset completely every 100 frames
-    
     // Current attractor parameters
     let params = { a: 1.7, b: 1.7, c: 0.6, d: 1.2 };
     let baseParams = { a: 1.7, b: 1.7, c: 0.6, d: 1.2 };
@@ -107,16 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update state
         updateAnimation(deltaTime);
-        
-        // Increment frame counter
-        frameCounter++;
-        
-        // Complete reset every N frames to prevent any buildup of artifacts
-        if (frameCounter % resetEveryNFrames === 0) {
-            // Clear the canvas completely
-            ctx.fillStyle = "#000000";
-            ctx.fillRect(0, 0, width, height);
-        }
         
         // Draw frame
         drawAttractorPoints(1200); // Moderate number of points for good performance
