@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let nameTimer = 0;
     let currentPresetIndex = 0;
     let colorMode = true;
-    const fadeOpacity = 0.04; // Controls the trail effect
+    const fadeOpacity = 0.02; // Reduced fade opacity for cleaner trails
     
     // Current attractor parameters
     let params = { a: 1.7, b: 1.7, c: 0.6, d: 1.2 };
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateAnimation(deltaTime);
         
         // Draw frame
-        drawAttractorPoints(1200); // Moderate number of points for good performance
+        drawAttractorPoints(2000); // Increased number of points for better coverage
         
         // Request next frame
         requestAnimationFrame(animate);
@@ -195,7 +195,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function clearCanvasWithFade() {
+        // Create a semi-transparent black for trails
         ctx.fillStyle = `rgba(0, 0, 0, ${fadeOpacity})`;
+        ctx.fillRect(0, 0, width, height);
+        
+        // Add a subtle radial gradient to soften the edges
+        const gradient = ctx.createRadialGradient(
+            width/2, height/2, 0,
+            width/2, height/2, Math.min(width, height) / 2
+        );
+        
+        gradient.addColorStop(0, "rgba(0, 0, 0, 0)"); // Transparent in the center
+        gradient.addColorStop(0.85, "rgba(0, 0, 0, 0)"); // Stay transparent until near the edge
+        gradient.addColorStop(1, "rgba(0, 0, 0, 0.03)"); // Very subtle fade at the edges
+        
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, width, height);
     }
     
@@ -790,9 +804,16 @@ document.addEventListener('DOMContentLoaded', function() {
             ? hslToRgb(h, s, l) 
             : hslToRgb(0, 0, l); // Grayscale when colorMode is false
         
+        // Draw a subtle glow first (larger, more transparent)
+        ctx.globalAlpha = alpha * 0.3;
         ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(x, y, pointSize * 2, 0, Math.PI * 2);
+        ctx.fill();
         
+        // Draw the main point
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
         ctx.beginPath();
         ctx.arc(x, y, pointSize, 0, Math.PI * 2);
         ctx.fill();
