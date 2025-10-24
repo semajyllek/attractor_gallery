@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    cursor: pointer; /* Indicate the page is clickable */
+    font-family: 'Montserrat', sans-serif;
+}
+
+canvas {
+    display: block;
+    background-color: #000;
+}
+
+#colorToggle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
+    z-index: 200;
+    opacity: 0;
+    cursor: pointer;
+}
+
+#nameDisplay {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 18px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    opacity: 0;
+    transition: opacity 0.5s;
+    padding: 10px;
+    z-index: 100;
+    pointer-events: none;
+}
+
+#nameDisplay.visible {
+    opacity: 1;
+}
