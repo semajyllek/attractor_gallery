@@ -234,6 +234,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return transformQuantumPattern(x, y);
             case "lorenz":
                 return transformLorenzPattern(x, y);
+            case "rossler":
+                return transformRosslerPattern(x, y);
+            case "henon":
+                return transformHenonPattern(x, y);
+            case "ikeda":
+                return transformIkedaPattern(x, y);
             default:
                 return { x, y };
         }
@@ -332,13 +338,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const beta = 8/3;
         
         // Use the Clifford attractor coordinates as a starting point
+        // Scale them to work better with the Lorenz system
         let lorenzX = x * 0.1;
         let lorenzY = y * 0.1;
         let lorenzZ = 0.1;
         
-        // Simulate a few steps of the Lorenz system to get the characteristic butterfly shape
+        // Simulate several steps of the Lorenz system to get the characteristic butterfly shape
         const dt = 0.005;
-        const steps = 5;
+        const steps = 10; // Increased steps for more pronounced effect
         
         for (let i = 0; i < steps; i++) {
             // The Lorenz equations
@@ -360,13 +367,151 @@ document.addEventListener('DOMContentLoaded', function() {
         const projX = lorenzX * cosA + lorenzZ * sinA;
         const projY = lorenzY;
         
-        // Add a slight displacement based on the original coordinates for more variation
-        const transformedX = projX * 0.15 + x * 0.85;
-        const transformedY = projY * 0.15 + y * 0.85;
+        // More pronounced effect - use more of the Lorenz transformation
+        // This makes the butterfly shape more visible
+        const transformedX = projX * 0.4 + x * 0.6;
+        const transformedY = projY * 0.4 + y * 0.6;
         
         return { x: transformedX, y: transformedY };
     }
     
+
+    function transformRosslerPattern(x, y) {
+        // Rössler attractor parameters
+        const a = 0.2;
+        const b = 0.2; 
+        const c = 5.7;
+        
+        // Use the Clifford attractor coordinates as a starting point
+        let rosslerX = x * 0.1;
+        let rosslerY = y * 0.1;
+        let rosslerZ = 0.1;
+        
+        // Simulate a few steps of the Rössler system
+        const dt = 0.01;
+        const steps = 5;
+        
+        for (let i = 0; i < steps; i++) {
+            // The Rössler equations
+            const dx = (-rosslerY - rosslerZ) * dt;
+            const dy = (rosslerX + a * rosslerY) * dt;
+            const dz = (b + rosslerZ * (rosslerX - c)) * dt;
+            
+            rosslerX += dx;
+            rosslerY += dy;
+            rosslerZ += dz;
+        }
+        
+        // Project the 3D Rössler system to 2D, with time-based rotation
+        const angle = animationPhase * 0.15;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        
+        // Dynamic projection that emphasizes the spiral structure
+        const projX = rosslerX * cosA - rosslerY * sinA;
+        const projY = rosslerY * cosA + rosslerX * sinA;
+        
+        // Blend with original coordinates for a cohesive look
+        const transformedX = projX * 0.3 + x * 0.7;
+        const transformedY = projY * 0.3 + y * 0.7;
+        
+        // Add subtle spiral distortion
+        const dist = Math.sqrt(transformedX * transformedX + transformedY * transformedY);
+        const ang = Math.atan2(transformedY, transformedX);
+        const spiralFactor = 0.1 * Math.sin(dist * 3 - animationPhase * 0.2);
+        
+        const finalX = transformedX + spiralFactor * Math.cos(ang);
+        const finalY = transformedY + spiralFactor * Math.sin(ang);
+        
+        return { x: finalX, y: finalY };
+    }
+    
+    function transformHenonPattern(x, y) {
+        // Hénon map parameters
+        const a = 1.4;
+        const b = 0.3;
+        
+        // Apply Hénon map transformation directly to the coordinates
+        // The Hénon map is 2D, so we can apply it more directly
+        
+        // Scale the input coordinates to the right range
+        let henonX = x * 0.15;
+        let henonY = y * 0.15;
+        
+        // Apply several iterations of the Hénon map
+        const steps = 3;
+        
+        for (let i = 0; i < steps; i++) {
+            // The Hénon map equations
+            const nextX = 1 - a * henonX * henonX + henonY;
+            const nextY = b * henonX;
+            
+            henonX = nextX;
+            henonY = nextY;
+        }
+        
+        // Add a time-dependent rotation to make it more dynamic
+        const angle = animationPhase * 0.2;
+        const cosA = Math.cos(angle);
+        const sinA = Math.sin(angle);
+        
+        const rotX = henonX * cosA - henonY * sinA;
+        const rotY = henonX * sinA + henonY * cosA;
+        
+        // Blend with original coordinates
+        const transformedX = rotX * 0.25 + x * 0.75;
+        const transformedY = rotY * 0.25 + y * 0.75;
+        
+        return { x: transformedX, y: transformedY };
+    }
+    
+    function transformIkedaPattern(x, y) {
+        // Ikeda map parameters
+        const u = 0.918;
+        const t = 0.4;
+        
+        // Scale the input coordinates
+        let ikedaX = x * 0.2;
+        let ikedaY = y * 0.2;
+        
+        // Apply several iterations of the Ikeda map
+        const steps = 3;
+        
+        for (let i = 0; i < steps; i++) {
+            // Calculate the Ikeda tau parameter
+            const xSquared = ikedaX * ikedaX;
+            const ySquared = ikedaY * ikedaY;
+            const r = Math.sqrt(1 + xSquared + ySquared);
+            const theta = t - 6 / (1 + r);
+            
+            // The Ikeda map equations
+            const nextX = 1 + u * (ikedaX * Math.cos(theta) - ikedaY * Math.sin(theta));
+            const nextY = u * (ikedaX * Math.sin(theta) + ikedaY * Math.cos(theta));
+            
+            ikedaX = nextX;
+            ikedaY = nextY;
+        }
+        
+        // Scale down the result (Ikeda can get large)
+        ikedaX *= 0.1;
+        ikedaY *= 0.1;
+        
+        // Add a time-varying swirl effect
+        const distance = Math.sqrt(ikedaX * ikedaX + ikedaY * ikedaY);
+        const angle = Math.atan2(ikedaY, ikedaX);
+        
+        const swirlFactor = 0.1 * Math.sin(distance * 4 - animationPhase * 0.3);
+        const swirlAngle = angle + swirlFactor;
+        
+        const swirlX = distance * Math.cos(swirlAngle);
+        const swirlY = distance * Math.sin(swirlAngle);
+        
+        // Blend with original coordinates
+        const transformedX = swirlX * 0.25 + x * 0.75;
+        const transformedY = swirlY * 0.25 + y * 0.75;
+        
+        return { x: transformedX, y: transformedY };
+    }
     function isOutsideCanvas(x, y) {
         const padding = 10;
         return x < -padding || x > width + padding || y < -padding || y > height + padding;
@@ -393,6 +538,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return calculateQuantumAppearance(x, y, hue);
             case "lorenz":
                 return calculateLorenzAppearance(x, y, hue);
+            case "rossler":
+                return calculateRosslerAppearance(x, y, hue);
+            case "henon":
+                return calculateHenonAppearance(x, y, hue);
+            case "ikeda":
+                return calculateIkedaAppearance(x, y, hue);
             default:
                 return calculateStandardAppearance(x, y, hue);
         }
@@ -478,6 +629,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const distance = Math.sqrt(x*x + y*y);
         const angle = Math.atan2(y, x);
         
+        // Create a more distinct effect for the Lorenz "butterfly wings"
+        const wingEffect = Math.sin(angle * 2 + distance * 3) * Math.cos(distance * 2 - angle);
+        
+        // Use the wing effect to create "altitude" bands of color
+        // This mimics the layered structure of the Lorenz attractor
+        const layerValue = (wingEffect + 1) * 0.5;  // Normalize to 0-1
+        
+        // Create a color gradient that shifts across the "wings"
+        // Green to blue-green for the classic Lorenz butterfly look
+        const h = (hue + layerValue * 0.2) % 1;
+        
+        // More saturated at the edges of the wings
+        const s = 0.7 + layerValue * 0.3;
+        
+        // Brighter in the center parts
+        const l = 0.4 + Math.pow(Math.sin(layerValue * Math.PI), 2) * 0.4;
+        
+        // More opaque overall with some variation
+        const alpha = 0.7 + layerValue * 0.3;
+        
+        // Larger points in the dense regions of the attractor
+        const pointSize = 1.5 + layerValue * 2.5;
+        
+        return { h, s, l, alpha, pointSize };
+    }
+    
+
+    function calculateLorenzAppearance(x, y, hue) {
+        const distance = Math.sqrt(x*x + y*y);
+        const angle = Math.atan2(y, x);
+        
         // Create a height-map-like effect to simulate the Lorenz "butterfly wings"
         const wingEffect = Math.sin(angle * 2 + distance * 3) * Math.cos(distance * 2 - angle);
         
@@ -504,6 +686,88 @@ document.addEventListener('DOMContentLoaded', function() {
         return { h, s, l, alpha, pointSize };
     }
     
+    function calculateRosslerAppearance(x, y, hue) {
+        const distance = Math.sqrt(x*x + y*y);
+        const angle = Math.atan2(y, x);
+        
+        // Create a spiral-based coloring effect
+        // The Rössler attractor's most distinctive feature is its spiral structure
+        const spiralPhase = angle + distance * 2;
+        
+        // Normalize spiral phase to 0-1 range
+        const spiralValue = (Math.sin(spiralPhase) + 1) * 0.5;
+        
+        // Create pink-purple-blue color gradient that follows the spiral structure
+        const h = (hue + spiralValue * 0.2) % 1;
+        
+        // More saturated colors along the spiral
+        const s = 0.6 + spiralValue * 0.4;
+        
+        // Brighter along the spiral path
+        const l = 0.4 + spiralValue * 0.3;
+        
+        // Vary opacity to emphasize spiral structure
+        const alpha = 0.6 + spiralValue * 0.4;
+        
+        // Vary point size to highlight the spiral
+        const pointSize = 1.2 + spiralValue * 1.8;
+        
+        return { h, s, l, alpha, pointSize };
+    }
+    
+    function calculateHenonAppearance(x, y, hue) {
+        const distance = Math.sqrt(x*x + y*y);
+        const angle = Math.atan2(y, x);
+        
+        // The Hénon map creates a distinctive horseshoe-shaped attractor
+        // Use angle-based coloring to highlight this structure
+        const anglePhase = (Math.cos(angle * 3) + 1) * 0.5;
+        
+        // Create a color gradient that emphasizes the horseshoe shape
+        // Yellow-greens for the Hénon map's characteristic shape
+        const h = (hue + anglePhase * 0.15) % 1;
+        
+        // More saturated at the edges of the horseshoe
+        const s = 0.7 + Math.sin(distance * 4) * 0.3;
+        
+        // Brighter at the dense regions
+        const l = 0.4 + anglePhase * 0.3;
+        
+        // More opaque at the dense regions
+        const alpha = 0.6 + anglePhase * 0.4;
+        
+        // Vary size based on position in the horseshoe
+        const pointSize = 1.3 + Math.sin(angle * 2) * 0.8;
+        
+        return { h, s, l, alpha, pointSize };
+    }
+    
+    function calculateIkedaAppearance(x, y, hue) {
+        const distance = Math.sqrt(x*x + y*y);
+        const angle = Math.atan2(y, x);
+        
+        // The Ikeda attractor creates elegant swirls and loops
+        // Create a distance and angle-based coloring effect
+        const swirl = Math.sin(distance * 3 + angle * 4 + animationPhase * 0.2);
+        const swirlValue = (swirl + 1) * 0.5;
+        
+        // Warm orange-amber colors for the Ikeda attractor
+        const h = (hue + swirlValue * 0.1) % 1;
+        
+        // More saturated along the swirl patterns
+        const s = 0.6 + swirlValue * 0.4;
+        
+        // Brighter in the dense regions
+        const l = 0.4 + Math.pow(swirlValue, 2) * 0.4;
+        
+        // Vary opacity to emphasize structure
+        const alpha = 0.5 + swirlValue * 0.5;
+        
+        // Larger points at the attractor's focal points
+        const pointSize = 1.0 + swirlValue * 2.0;
+        
+        return { h, s, l, alpha, pointSize };
+    }
     function calculateStandardAppearance(x, y, hue) {
         const distance = Math.sqrt(x*x + y*y);
         const angle = Math.atan2(y, x) / Math.PI;

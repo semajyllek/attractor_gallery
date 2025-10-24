@@ -23,6 +23,9 @@ const presets = [
     // Quantum pattern
     { a: -1.24, b: -1.25, c: -1.82, d: 1.16, name: "QUANTUM FLUX", hue: 0.55, pattern: "quantum" },
     
-    // Lorenz attractor inspired pattern
-    { a: 1.2, b: 2.2, c: -1.4, d: 0.9, name: "LORENZ BUTTERFLY", hue: 0.35, pattern: "lorenz" }
+    // Additional attractor patterns
+    { a: 1.2, b: 2.2, c: -1.4, d: 0.9, name: "LORENZ BUTTERFLY", hue: 0.35, pattern: "lorenz" },
+    { a: 1.4, b: 1.1, c: 1.0, d: 1.8, name: "RÖSSLER SPIRAL", hue: 0.95, pattern: "rossler" },
+    { a: 2.1, b: -2.3, c: 1.9, d: -1.1, name: "HENON ORBIT", hue: 0.45, pattern: "henon" },
+    { a: -0.97, b: 2.09, c: 1.18, d: 1.32, name: "STRANGE BASIN", hue: 0.02, pattern: "ikeda" }
 ];
