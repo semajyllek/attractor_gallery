@@ -5,10 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const nameDisplay = document.getElementById('nameDisplay');
     const colorToggle = document.getElementById('colorToggle');
     
-    // Create an off-screen buffer canvas for proper fading
-    let bufferCanvas;
-    let bufferCtx;
-    
     // State variables
     let width, height;
     let animationPhase = 0;
@@ -16,7 +12,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let nameTimer = 0;
     let currentPresetIndex = 0;
     let colorMode = true;
-    const fadeOpacity = 0.04; // Controls the trail effect
+    const fadeOpacity = 0.08; // Increased fade opacity for faster clearing of traces
+    
+    // Counter for periodic canvas reset
+    let frameCounter = 0;
+    const resetEveryNFrames = 100; // Reset completely every 100 frames
     
     // Current attractor parameters
     let params = { a: 1.7, b: 1.7, c: 0.6, d: 1.2 };
@@ -47,16 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
         height = window.innerHeight;
         canvas.width = width;
         canvas.height = height;
-        
-        // Initialize the buffer canvas
-        bufferCanvas = document.createElement('canvas');
-        bufferCanvas.width = width;
-        bufferCanvas.height = height;
-        bufferCtx = bufferCanvas.getContext('2d');
-        
-        // Fill buffer with black initially
-        bufferCtx.fillStyle = "#000000";
-        bufferCtx.fillRect(0, 0, width, height);
     }
     
     /**
@@ -76,12 +66,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update parameters from the new preset
         updateParametersFromPreset();
         
-        // Completely clear both canvases when changing patterns to remove any artifacts
+        // Completely clear the canvas when changing patterns to remove any artifacts
         ctx.fillStyle = "#000000";
         ctx.fillRect(0, 0, width, height);
-        
-        bufferCtx.fillStyle = "#000000";
-        bufferCtx.fillRect(0, 0, width, height);
         
         // Display the preset name
         displayPresetName();
@@ -120,6 +107,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Update state
         updateAnimation(deltaTime);
+        
+        // Increment frame counter
+        frameCounter++;
+        
+        // Complete reset every N frames to prevent any buildup of artifacts
+        if (frameCounter % resetEveryNFrames === 0) {
+            // Clear the canvas completely
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, width, height);
+        }
         
         // Draw frame
         drawAttractorPoints(1200); // Moderate number of points for good performance
@@ -213,28 +210,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function clearCanvasWithFade() {
-        // Swap canvases to apply fade effect correctly
-        
-        // First, draw the current canvas onto the buffer with reduced opacity
-        bufferCtx.globalCompositeOperation = 'source-over';
-        bufferCtx.globalAlpha = 1 - fadeOpacity;
-        bufferCtx.drawImage(canvas, 0, 0);
-        
-        // Then fade to black slightly
-        bufferCtx.globalCompositeOperation = 'source-over';
-        bufferCtx.globalAlpha = fadeOpacity;
-        bufferCtx.fillStyle = "#000000";
-        bufferCtx.fillRect(0, 0, width, height);
-        
-        // Reset alpha for future operations
-        bufferCtx.globalAlpha = 1.0;
-        
-        // Clear the main canvas completely
+        // Apply the fade effect with a strong black overlay
         ctx.fillStyle = "#000000";
+        ctx.globalAlpha = fadeOpacity;
         ctx.fillRect(0, 0, width, height);
         
-        // Draw the buffer onto the main canvas
-        ctx.drawImage(bufferCanvas, 0, 0);
+        // Reset alpha for drawing new points
+        ctx.globalAlpha = 1.0;
     }
     
     function initializeAttractor() {
@@ -828,14 +810,19 @@ document.addEventListener('DOMContentLoaded', function() {
             ? hslToRgb(h, s, l) 
             : hslToRgb(0, 0, l); // Grayscale when colorMode is false
         
+        // Use a light source composition for better blending
+        ctx.globalCompositeOperation = 'lighter';
+        
+        // Set the color with a more vibrant approach to avoid grey artifacts
         ctx.fillStyle = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-        ctx.globalAlpha = alpha;
+        ctx.globalAlpha = alpha * 0.9; // Slightly reduced opacity for better blending
         
         ctx.beginPath();
         ctx.arc(x, y, pointSize, 0, Math.PI * 2);
         ctx.fill();
         
-        // Reset global alpha for next operations
+        // Reset composition and alpha for next operations
+        ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1.0;
     }
     
